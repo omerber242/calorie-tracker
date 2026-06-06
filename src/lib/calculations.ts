@@ -73,7 +73,7 @@ export function sumMacros(entries: Array<{
   carbs?: number | null;
   fat?: number | null;
   fiber?: number | null;
-}>) {
+}>): { calories: number; protein: number; carbs: number; fat: number; fiber: number } {
   return entries.reduce(
     (acc, e) => ({
       calories: acc.calories + (e.calories ?? 0),
