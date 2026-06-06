@@ -2,15 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "env": {
-    "USDA_API_KEY": "@usda_api_key",
-    "ANTHROPIC_API_KEY": "@anthropic_api_key"
-  },
-  "build": {
-    "env": {
-      "USDA_API_KEY": "@usda_api_key",
-      "ANTHROPIC_API_KEY": "@anthropic_api_key"
-    }
-  }
+  "installCommand": "npm install"
 }
