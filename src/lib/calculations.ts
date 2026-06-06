@@ -73,17 +73,16 @@ export function sumMacros(entries: Array<{
   carbs?: number | null;
   fat?: number | null;
   fiber?: number | null;
-}>): { calories: number; protein: number; carbs: number; fat: number; fiber: number } {
-  return entries.reduce(
-    (acc, e) => ({
-      calories: acc.calories + (e.calories ?? 0),
-      protein: acc.protein + (e.protein ?? 0),
-      carbs: acc.carbs + (e.carbs ?? 0),
-      fat: acc.fat + (e.fat ?? 0),
-      fiber: acc.fiber + (e.fiber ?? 0),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
-  );
+}>) {
+  const result = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+  for (const e of entries) {
+    result.calories += e.calories ?? 0;
+    result.protein += e.protein ?? 0;
+    result.carbs += e.carbs ?? 0;
+    result.fat += e.fat ?? 0;
+    result.fiber += e.fiber ?? 0;
+  }
+  return result;
 }
 
 /** Scale USDA nutrients from per-100g to a given serving */
