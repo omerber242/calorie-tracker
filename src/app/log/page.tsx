@@ -60,11 +60,11 @@ export default function LogPage() {
         {/* Daily summary bar */}
         <div className="card grid grid-cols-5 text-center gap-2">
           {[
-            { label: 'Calories', val: Math.round(totals.calories), unit: 'kcal', color: 'text-orange-500' },
-            { label: 'Protein', val: Math.round(totals.protein), unit: 'g', color: 'text-blue-500' },
-            { label: 'Carbs', val: Math.round(totals.carbs), unit: 'g', color: 'text-purple-500' },
-            { label: 'Fat', val: Math.round(totals.fat), unit: 'g', color: 'text-yellow-500' },
-            { label: 'Fiber', val: Math.round(totals.fiber), unit: 'g', color: 'text-green-500' },
+            { label: 'Calories', val: Math.round(totals.calories ?? 0), unit: 'kcal', color: 'text-orange-500' },
+            { label: 'Protein', val: Math.round(totals.protein ?? 0), unit: 'g', color: 'text-blue-500' },
+            { label: 'Carbs', val: Math.round(totals.carbs ?? 0), unit: 'g', color: 'text-purple-500' },
+            { label: 'Fat', val: Math.round(totals.fat ?? 0), unit: 'g', color: 'text-yellow-500' },
+            { label: 'Fiber', val: Math.round(totals.fiber ?? 0), unit: 'g', color: 'text-green-500' },
           ].map(m => (
             <div key={m.label}>
               <div className={`text-base font-bold ${m.color}`}>{m.val}<span className="text-xs text-gray-400">{m.unit}</span></div>
