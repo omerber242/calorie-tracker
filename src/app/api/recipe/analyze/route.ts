@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (image) {
       const buffer = await image.arrayBuffer();
       const base64 = Buffer.from(buffer).toString('base64');
-      const mediaType = (image.type as Anthropic.Base64ImageSource['media_type']) || 'image/jpeg';
+      const mediaType = (image.type || 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 
       messages = [
         {
