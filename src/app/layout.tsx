@@ -5,18 +5,12 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CalTrack — Food & Calorie Tracker',
-  description: 'Track your food, calories, and macros with AI-powered recipe analysis',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'CalTrack',
-  },
+  title: 'WorkSpace — Desk Reservation',
+  description: 'Reserve your workspace desk for the day or week',
 };
 
 export const viewport: Viewport = {
-  themeColor: '#22c55e',
+  themeColor: '#2563eb',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
