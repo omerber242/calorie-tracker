@@ -1,11 +1,11 @@
 {
-  "name": "Calorie Tracker",
-  "short_name": "CalTrack",
-  "description": "Track food, calories, and macros",
+  "name": "טיול יפן — מעקב הוצאות",
+  "short_name": "יפן",
+  "description": "מעקב אחרי הוצאות בטיול ליפן, לפי קטגוריה ותקציב",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#22c55e",
+  "theme_color": "#e11d48",
   "orientation": "portrait",
   "icons": [
     {

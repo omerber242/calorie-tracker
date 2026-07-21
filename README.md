@@ -1,55 +1,47 @@
-# CalTrack — Food & Calorie Tracker
+# 🇯🇵 טיול יפן — מעקב הוצאות
 
-A full-stack PWA for tracking food, calories, and macros with AI-powered recipe analysis.
+PWA למעקב אחרי ההוצאות בטיול ליפן: כל הוצאה נרשמת בין (¥), עם המרה אוטומטית לשקלים (₪), פילוח לפי קטגוריה ומעקב תקציב.
 
-## Features
+## תכונות
 
-- **Food search** — searches USDA's 700,000+ food database; auto-scales macros to your portion size
-- **Recipe analyzer** — paste text or upload a photo; Claude AI breaks down every ingredient
-- **Smart goal setting** — enter a protein target (e.g. 150g/day) and it calculates calories, carbs, and fat automatically using your TDEE
-- **History** — full food log browsable by date, persistent via Supabase
-- **PWA** — installable on iOS/Android from the browser; works offline for log viewing
+- **רישום הוצאות** — תאריך, קטגוריה, סכום בין, אמצעי תשלום (מזומן/כרטיס) והערה חופשית
+- **דשבורד** — סה"כ הוצאות, יתרת תקציב, יום נוכחי בטיול, גרף עוגה לפי קטגוריה
+- **תקציב** — תקציב כולל ותקציב לכל קטגוריה בנפרד, עם פס התקדמות שמתריע כשחורגים
+- **המרת מטבע** — שער חליפין ין-שקל ניתן לעדכון ידני, ומוצג בכל מסך לצד הסכום בין
+- **רשימת הוצאות** — מקובצת לפי יום, עם סינון לפי קטגוריה ועריכה/מחיקה מהירה
+- **PWA** — ניתן להתקנה על המסך הראשי באייפון/אנדרואיד
 
 ---
 
-## Stack
+## טכנולוגיות
 
-| Layer | Tech |
+| שכבה | טכנולוגיה |
 |---|---|
 | Frontend + API | Next.js 15 (App Router) |
-| Database + Auth | Supabase (Postgres + Auth) |
-| Nutrition data | USDA FoodData Central API |
-| Recipe AI | Anthropic Claude (claude-opus-4-6) |
-| Styling | Tailwind CSS |
+| מסד נתונים | Supabase (Postgres) |
+| גרפים | Recharts |
+| עיצוב | Tailwind CSS |
+
+האפליקציה מיועדת לשימוש אישי/משפחתי — אין בה מערכת התחברות, כל הנתונים משותפים למי שיש לו את הקישור.
 
 ---
 
-## Setup
+## הרצה
 
 ### 1. Supabase
 
-1. Create a free project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** → paste the contents of `supabase/migrations/001_initial.sql` → Run
-3. Copy your **Project URL** and **anon key** from Settings → API
+1. צרו פרויקט חינמי ב-[supabase.com](https://supabase.com)
+2. היכנסו ל-**SQL Editor** → הדביקו את התוכן של `supabase/migrations/001_initial.sql` → Run
+3. העתיקו את ה-**Project URL** וה-**anon key** מתוך Settings → API
 
-### 2. USDA API Key
-
-1. Request a free key at [fdc.nal.usda.gov/api-guide.html](https://fdc.nal.usda.gov/api-guide.html)
-2. Takes ~1 minute via email
-
-### 3. Anthropic API Key
-
-1. Create an account at [console.anthropic.com](https://console.anthropic.com)
-2. Generate an API key under API Keys
-
-### 4. Environment variables
+### 2. משתני סביבה
 
 ```bash
 cp .env.local.example .env.local
-# Edit .env.local with your three keys
+# ערכו את .env.local עם פרטי הפרויקט שלכם
 ```
 
-### 5. Run locally
+### 3. הרצה מקומית
 
 ```bash
 npm install
@@ -57,60 +49,47 @@ npm run dev
 # → http://localhost:3000
 ```
 
-### 6. Deploy (Vercel — recommended)
+### 4. פריסה (Vercel — מומלץ)
 
 ```bash
 npm install -g vercel
 vercel
-# Add environment variables in the Vercel dashboard
+# הוסיפו את משתני הסביבה בדשבורד של Vercel
 ```
 
 ---
 
-## Usage
+## שימוש
 
-### Adding food
-- Tap **+ Add Food** or the **+** next to a meal section
-- Search the USDA database (e.g. "chicken breast") or enter manually
-- Set serving size in grams — macros update automatically
+### הוספת הוצאה
+לחצו על כפתור ה-**+** הצף → בחרו תאריך, קטגוריה, סכום בין, אמצעי תשלום, והוסיפו הערה אם רוצים
 
-### Analyzing a recipe
-- Go to **Recipes** → paste a recipe or ingredient list, OR upload a photo
-- Claude returns a full ingredient breakdown with per-serving macros
-- Save the recipe and log servings directly to today's log
+### עריכה/מחיקה
+לחצו על הוצאה קיימת ברשימת "הוצאות" כדי לערוך או למחוק אותה
 
-### Setting goals
-- Go to **Goals** → enter your stats (weight, height, age, activity)
-- Choose a goal type (weight loss / maintenance / muscle gain / custom)
-- Enter a **protein target** (e.g. 150g) and hit **Calculate** — calories, carbs, and fat are filled in automatically
-- Dashboard rings show your daily progress
+### הגדרת תקציב
+בעמוד "תקציב" — הגדירו את תאריכי הטיול, תקציב כולל בין, שער חליפין (₪ לכל ¥1), ואופציונלית תקציב נפרד לכל קטגוריה
 
 ---
 
-## App structure
+## מבנה האפליקציה
 
 ```
 src/
   app/
-    page.tsx              # Dashboard (today's macros + meals)
-    log/page.tsx          # Full date-browsable food log
-    goals/page.tsx        # Goal setting + TDEE calculator
-    recipes/page.tsx      # Recipe analyzer + saved recipes
-    auth/page.tsx         # Login / signup
+    page.tsx               # דשבורד — סיכום, גרף קטגוריות, הוצאות אחרונות
+    expenses/page.tsx       # רשימת הוצאות מלאה, מקובצת לפי יום עם סינון
+    budget/page.tsx         # הגדרת תקציב ותאריכי טיול
     api/
-      food/search/        # USDA search
-      food/details/       # USDA nutrient details + scaling
-      recipe/analyze/     # Claude vision + text recipe breakdown
-      log/                # Food log CRUD
-      goals/              # Goals CRUD + macro calculation
-      recipes/            # Saved recipes CRUD
+      expenses/            # CRUD להוצאות
+      budget/               # שמירת/קריאת הגדרות התקציב
   components/
-    Navigation.tsx        # Top nav (desktop) + bottom tab bar (mobile)
-    MacroRings.tsx        # SVG progress rings
-    AddFoodModal.tsx      # Food search + manual entry modal
+    Navigation.tsx          # ניווט תחתון (מובייל) / עליון (דסקטופ)
+    CategoryChart.tsx        # גרף עוגה — הוצאות לפי קטגוריה
+    ExpenseModal.tsx        # מודל הוספה/עריכה של הוצאה
   lib/
-    supabase/             # Browser + server clients
-    calculations.ts       # TDEE, macro calc, sumMacros
+    supabase/               # לקוחות Supabase (client + server)
+    currency.ts             # קטגוריות, פורמט ¥/₪, המרת מטבע
   types/index.ts
 supabase/
   migrations/001_initial.sql
