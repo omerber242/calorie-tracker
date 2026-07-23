@@ -20,8 +20,8 @@ export async function PUT(req: Request) {
   const payload = {
     start_date: body.start_date || null,
     end_date: body.end_date || null,
-    total_budget_jpy: Number(body.total_budget_jpy) || 0,
-    exchange_rate: Number(body.exchange_rate) || 0.024,
+    total_budget_ils: Number(body.total_budget_ils) || 0,
+    exchange_rates: body.exchange_rates || { JPY: 0.024, USD: 3.7, EUR: 4.0, ILS: 1 },
     category_budgets: body.category_budgets || {
       food: 0, transport: 0, lodging: 0, shopping: 0, activities: 0, other: 0,
     },

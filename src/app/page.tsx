@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ExpenseModal from '@/components/ExpenseModal';
 import CategoryChart from '@/components/CategoryChart';
-import { CATEGORIES, formatJPY, formatILS, jpyToIls, categoryInfo } from '@/lib/currency';
+import { CATEGORIES, DEFAULT_EXCHANGE_RATES, formatAmount, formatILS, toIls, categoryInfo } from '@/lib/currency';
 import type { Expense, TripBudget } from '@/types';
 
 function daysBetween(a: string, b: string): number {
@@ -38,9 +38,9 @@ export default function DashboardPage() {
     });
   }
 
-  const rate = budget?.exchange_rate || 0.024;
-  const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount_jpy), 0);
-  const totalBudget = budget?.total_budget_jpy || 0;
+  const rates = budget?.exchange_rates || DEFAULT_EXCHANGE_RATES;
+  const totalSpent = expenses.reduce((sum, e) => sum + toIls(Number(e.amount), e.currency, rates), 0);
+  const totalBudget = budget?.total_budget_ils || 0;
   const remaining = totalBudget - totalSpent;
   const today = todayStr();
 
@@ -93,20 +93,16 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="card">
                 <div className="text-xs text-gray-400 mb-1">סה&quot;כ הוצאות</div>
-                <div className="text-xl font-bold text-gray-900">{formatJPY(totalSpent)}</div>
-                <div className="text-xs text-gray-400">≈ {formatILS(jpyToIls(totalSpent, rate))}</div>
+                <div className="text-xl font-bold text-gray-900">{formatILS(totalSpent)}</div>
               </div>
               <div className="card">
                 <div className="text-xs text-gray-400 mb-1">
                   {totalBudget > 0 ? 'נשאר מהתקציב' : 'תקציב'}
                 </div>
                 {totalBudget > 0 ? (
-                  <>
-                    <div className={`text-xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                      {formatJPY(remaining)}
-                    </div>
-                    <div className="text-xs text-gray-400">≈ {formatILS(jpyToIls(remaining, rate))}</div>
-                  </>
+                  <div className={`text-xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatILS(remaining)}
+                  </div>
                 ) : (
                   <div className="text-sm text-gray-400 mt-1">לא הוגדר</div>
                 )}
@@ -116,7 +112,7 @@ export default function DashboardPage() {
             {/* Category breakdown */}
             <div className="card">
               <h2 className="font-semibold text-gray-900 mb-3 text-sm">הוצאות לפי קטגוריה</h2>
-              <CategoryChart expenses={expenses} />
+              <CategoryChart expenses={expenses} rates={rates} />
             </div>
 
             {/* Budget progress per category */}
@@ -126,7 +122,9 @@ export default function DashboardPage() {
                 {CATEGORIES.map(c => {
                   const catBudget = budget.category_budgets[c.id] || 0;
                   if (catBudget <= 0) return null;
-                  const spent = expenses.filter(e => e.category === c.id).reduce((s, e) => s + Number(e.amount_jpy), 0);
+                  const spent = expenses
+                    .filter(e => e.category === c.id)
+                    .reduce((s, e) => s + toIls(Number(e.amount), e.currency, rates), 0);
                   const pct = Math.min(100, Math.round((spent / catBudget) * 100));
                   const over = spent > catBudget;
                   return (
@@ -134,7 +132,7 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="text-gray-600">{c.icon} {c.label}</span>
                         <span className={over ? 'text-red-600 font-medium' : 'text-gray-500'}>
-                          {formatJPY(spent)} / {formatJPY(catBudget)}
+                          {formatILS(spent)} / {formatILS(catBudget)}
                         </span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -174,8 +172,15 @@ export default function DashboardPage() {
                             <div className="text-xs text-gray-400">{e.date}</div>
                           </div>
                         </div>
-                        <div className="text-sm font-semibold text-gray-900 shrink-0">
-                          {formatJPY(e.amount_jpy)}
+                        <div className="text-left shrink-0">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {formatAmount(e.amount, e.currency)}
+                          </div>
+                          {e.currency !== 'ILS' && (
+                            <div className="text-xs text-gray-400">
+                              ≈ {formatILS(toIls(e.amount, e.currency, rates))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -197,7 +202,7 @@ export default function DashboardPage() {
 
       {showAdd && (
         <ExpenseModal
-          exchangeRate={rate}
+          rates={rates}
           onClose={() => setShowAdd(false)}
           onSaved={e => {
             setExpenses(prev => [e, ...prev]);

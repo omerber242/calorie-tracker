@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CATEGORIES, formatILS, jpyToIls } from '@/lib/currency';
-import type { CategoryBudgets, TripBudget } from '@/types';
+import { CATEGORIES, CURRENCIES, DEFAULT_EXCHANGE_RATES } from '@/lib/currency';
+import type { CategoryBudgets, Currency, ExchangeRates, TripBudget } from '@/types';
 
 const EMPTY_CATEGORY_BUDGETS: CategoryBudgets = {
   food: 0, transport: 0, lodging: 0, shopping: 0, activities: 0, other: 0,
 };
 
+const EDITABLE_CURRENCIES = CURRENCIES.filter(c => c.id !== 'ILS');
+
 export default function BudgetPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [totalBudget, setTotalBudget] = useState('');
-  const [exchangeRate, setExchangeRate] = useState('0.024');
+  const [rates, setRates] = useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgets>(EMPTY_CATEGORY_BUDGETS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,15 +27,14 @@ export default function BudgetPage() {
         if (bud) {
           setStartDate(bud.start_date || '');
           setEndDate(bud.end_date || '');
-          setTotalBudget(bud.total_budget_jpy ? String(bud.total_budget_jpy) : '');
-          setExchangeRate(String(bud.exchange_rate || 0.024));
+          setTotalBudget(bud.total_budget_ils ? String(bud.total_budget_ils) : '');
+          setRates({ ...DEFAULT_EXCHANGE_RATES, ...bud.exchange_rates, ILS: 1 });
           setCategoryBudgets({ ...EMPTY_CATEGORY_BUDGETS, ...bud.category_budgets });
         }
         setLoading(false);
       });
   }, []);
 
-  const rate = Number(exchangeRate) || 0;
   const totalNum = Number(totalBudget) || 0;
   const categorySum = Object.values(categoryBudgets).reduce((s, v) => s + (Number(v) || 0), 0);
 
@@ -46,8 +47,8 @@ export default function BudgetPage() {
       body: JSON.stringify({
         start_date: startDate || null,
         end_date: endDate || null,
-        total_budget_jpy: totalNum,
-        exchange_rate: rate,
+        total_budget_ils: totalNum,
+        exchange_rates: { ...rates, ILS: 1 },
         category_budgets: categoryBudgets,
       }),
     });
@@ -85,7 +86,7 @@ export default function BudgetPage() {
         <div className="card space-y-3">
           <h2 className="font-semibold text-gray-900 text-sm">תקציב כולל</h2>
           <div>
-            <label className="label">תקציב כולל (¥ ין יפני)</label>
+            <label className="label">תקציב כולל (₪)</label>
             <input
               type="number"
               inputMode="decimal"
@@ -94,29 +95,40 @@ export default function BudgetPage() {
               value={totalBudget}
               onChange={e => setTotalBudget(e.target.value)}
             />
-            {totalNum > 0 && <p className="text-xs text-gray-400 mt-1">≈ {formatILS(jpyToIls(totalNum, rate))}</p>}
           </div>
-          <div>
-            <label className="label">שער חליפין (₪ לכל ¥1)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.001"
-              className="input"
-              placeholder="0.024"
-              value={exchangeRate}
-              onChange={e => setExchangeRate(e.target.value)}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              עדכנו לפי השער העדכני בזמן הטיול — משמש להמרה בכל האפליקציה
-            </p>
+        </div>
+
+        <div className="card space-y-3">
+          <h2 className="font-semibold text-gray-900 text-sm">שערי חליפין (₪ לכל יחידה)</h2>
+          <p className="text-xs text-gray-400 -mt-1">
+            משמשים להמרת הוצאות שנרשמו במטבע שאינו שקל — עדכנו לפי השער העדכני
+          </p>
+          <div className="space-y-2.5">
+            {EDITABLE_CURRENCIES.map(c => (
+              <div key={c.id} className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 w-28 shrink-0">
+                  {c.symbol} {c.label}
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.001"
+                  className="input"
+                  placeholder="0"
+                  value={rates[c.id] || ''}
+                  onChange={e =>
+                    setRates(prev => ({ ...prev, [c.id]: Number(e.target.value) || 0 } as Record<Currency, number>))
+                  }
+                />
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 text-sm">תקציב לפי קטגוריה (לא חובה)</h2>
-            {categorySum > 0 && <span className="text-xs text-gray-400">סה&quot;כ {categorySum.toLocaleString()} ¥</span>}
+            {categorySum > 0 && <span className="text-xs text-gray-400">סה&quot;כ ₪{categorySum.toLocaleString()}</span>}
           </div>
           <div className="space-y-2.5">
             {CATEGORIES.map(c => (

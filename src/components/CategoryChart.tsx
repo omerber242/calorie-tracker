@@ -1,13 +1,15 @@
 'use client';
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { CATEGORIES, formatJPY } from '@/lib/currency';
-import type { Expense } from '@/types';
+import { CATEGORIES, formatILS, toIls } from '@/lib/currency';
+import type { Expense, ExchangeRates } from '@/types';
 
-export default function CategoryChart({ expenses }: { expenses: Expense[] }) {
+export default function CategoryChart({ expenses, rates }: { expenses: Expense[]; rates: ExchangeRates }) {
   const totals = CATEGORIES.map(c => ({
     ...c,
-    value: expenses.filter(e => e.category === c.id).reduce((sum, e) => sum + Number(e.amount_jpy), 0),
+    value: expenses
+      .filter(e => e.category === c.id)
+      .reduce((sum, e) => sum + toIls(Number(e.amount), e.currency, rates), 0),
   })).filter(c => c.value > 0);
 
   if (totals.length === 0) {
@@ -28,7 +30,7 @@ export default function CategoryChart({ expenses }: { expenses: Expense[] }) {
                 <Cell key={c.id} fill={c.color} stroke="none" />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => formatJPY(value)} />
+            <Tooltip formatter={(value: number) => formatILS(value)} />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -41,7 +43,7 @@ export default function CategoryChart({ expenses }: { expenses: Expense[] }) {
                 <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
                 {c.icon} {c.label}
               </span>
-              <span className="font-medium text-gray-900">{formatJPY(c.value)}</span>
+              <span className="font-medium text-gray-900">{formatILS(c.value)}</span>
             </div>
           ))}
       </div>

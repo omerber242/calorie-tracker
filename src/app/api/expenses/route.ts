@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 const CATEGORIES = ['food', 'transport', 'lodging', 'shopping', 'activities', 'other'];
 const PAYMENT_METHODS = ['cash', 'card'];
+const CURRENCIES = ['JPY', 'USD', 'EUR', 'ILS'];
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const body = await req.json();
 
-  if (!body.date || !body.amount_jpy || Number(body.amount_jpy) <= 0) {
+  if (!body.date || !body.amount || Number(body.amount) <= 0) {
     return NextResponse.json({ error: 'תאריך וסכום הם שדות חובה' }, { status: 400 });
   }
   if (body.category && !CATEGORIES.includes(body.category)) {
@@ -35,13 +36,17 @@ export async function POST(req: Request) {
   if (body.payment_method && !PAYMENT_METHODS.includes(body.payment_method)) {
     return NextResponse.json({ error: 'אמצעי תשלום לא תקין' }, { status: 400 });
   }
+  if (body.currency && !CURRENCIES.includes(body.currency)) {
+    return NextResponse.json({ error: 'מטבע לא תקין' }, { status: 400 });
+  }
 
   const { data, error } = await supabase
     .from('expenses')
     .insert({
       date: body.date,
       category: body.category || 'other',
-      amount_jpy: Number(body.amount_jpy),
+      amount: Number(body.amount),
+      currency: body.currency || 'JPY',
       payment_method: body.payment_method || 'cash',
       description: body.description?.trim() || null,
     })
@@ -59,7 +64,7 @@ export async function PUT(req: Request) {
   const body = await req.json();
 
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  if (!body.date || !body.amount_jpy || Number(body.amount_jpy) <= 0) {
+  if (!body.date || !body.amount || Number(body.amount) <= 0) {
     return NextResponse.json({ error: 'תאריך וסכום הם שדות חובה' }, { status: 400 });
   }
 
@@ -68,7 +73,8 @@ export async function PUT(req: Request) {
     .update({
       date: body.date,
       category: body.category || 'other',
-      amount_jpy: Number(body.amount_jpy),
+      amount: Number(body.amount),
+      currency: body.currency || 'JPY',
       payment_method: body.payment_method || 'cash',
       description: body.description?.trim() || null,
     })

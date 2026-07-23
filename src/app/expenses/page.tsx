@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ExpenseModal from '@/components/ExpenseModal';
-import { CATEGORIES, formatJPY, formatILS, jpyToIls, categoryInfo } from '@/lib/currency';
-import type { Expense, ExpenseCategory, TripBudget } from '@/types';
+import { CATEGORIES, DEFAULT_EXCHANGE_RATES, formatAmount, formatILS, toIls, categoryInfo } from '@/lib/currency';
+import type { Expense, ExpenseCategory, ExchangeRates, TripBudget } from '@/types';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [rate, setRate] = useState(0.024);
+  const [rates, setRates] = useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'all'>('all');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; expense?: Expense } | null>(null);
@@ -18,7 +18,7 @@ export default function ExpensesPage() {
       fetch('/api/budget').then(r => r.json()),
     ]).then(([exp, bud]: [Expense[], TripBudget | null]) => {
       setExpenses(Array.isArray(exp) ? exp : []);
-      if (bud?.exchange_rate) setRate(bud.exchange_rate);
+      if (bud?.exchange_rates) setRates(bud.exchange_rates);
       setLoading(false);
     });
   }, []);
@@ -37,7 +37,7 @@ export default function ExpensesPage() {
     return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
   }, [filtered]);
 
-  const total = filtered.reduce((sum, e) => sum + Number(e.amount_jpy), 0);
+  const total = filtered.reduce((sum, e) => sum + toIls(Number(e.amount), e.currency, rates), 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,19 +86,16 @@ export default function ExpensesPage() {
           <>
             <div className="card flex items-center justify-between">
               <span className="text-sm text-gray-500">סה&quot;כ ({filtered.length} הוצאות)</span>
-              <div className="text-left">
-                <div className="font-bold text-gray-900">{formatJPY(total)}</div>
-                <div className="text-xs text-gray-400">≈ {formatILS(jpyToIls(total, rate))}</div>
-              </div>
+              <div className="font-bold text-gray-900">{formatILS(total)}</div>
             </div>
 
             {groups.map(([date, items]) => {
-              const dayTotal = items.reduce((s, e) => s + Number(e.amount_jpy), 0);
+              const dayTotal = items.reduce((s, e) => s + toIls(Number(e.amount), e.currency, rates), 0);
               return (
                 <div key={date} className="card p-0 overflow-hidden">
                   <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">{date}</span>
-                    <span className="text-xs text-gray-400">{formatJPY(dayTotal)}</span>
+                    <span className="text-xs text-gray-400">{formatILS(dayTotal)}</span>
                   </div>
                   <div className="divide-y divide-gray-100">
                     {items.map(e => {
@@ -120,8 +117,15 @@ export default function ExpensesPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-sm font-semibold text-gray-900 shrink-0">
-                            {formatJPY(e.amount_jpy)}
+                          <div className="text-left shrink-0">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {formatAmount(e.amount, e.currency)}
+                            </div>
+                            {e.currency !== 'ILS' && (
+                              <div className="text-xs text-gray-400">
+                                ≈ {formatILS(toIls(e.amount, e.currency, rates))}
+                              </div>
+                            )}
                           </div>
                         </button>
                       );
@@ -137,7 +141,7 @@ export default function ExpensesPage() {
       {modal && (
         <ExpenseModal
           expense={modal.expense}
-          exchangeRate={rate}
+          rates={rates}
           onClose={() => setModal(null)}
           onSaved={e => {
             setExpenses(prev =>

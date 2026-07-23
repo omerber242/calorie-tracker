@@ -1,4 +1,4 @@
-import type { ExpenseCategory } from '@/types';
+import type { Currency, ExchangeRates, ExpenseCategory } from '@/types';
 
 export const CATEGORIES: { id: ExpenseCategory; label: string; icon: string; color: string }[] = [
   { id: 'food', label: 'אוכל', icon: '🍜', color: '#e11d48' },
@@ -9,18 +9,31 @@ export const CATEGORIES: { id: ExpenseCategory; label: string; icon: string; col
   { id: 'other', label: 'אחר', icon: '📦', color: '#64748b' },
 ];
 
+export const CURRENCIES: { id: Currency; label: string; symbol: string }[] = [
+  { id: 'JPY', label: 'ין יפני', symbol: '¥' },
+  { id: 'USD', label: 'דולר', symbol: '$' },
+  { id: 'EUR', label: 'יורו', symbol: '€' },
+  { id: 'ILS', label: 'שקל', symbol: '₪' },
+];
+
+export const DEFAULT_EXCHANGE_RATES: ExchangeRates = { JPY: 0.024, USD: 3.7, EUR: 4.0, ILS: 1 };
+
 export function categoryInfo(id: ExpenseCategory) {
   return CATEGORIES.find(c => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
 }
 
-export function formatJPY(amount: number): string {
-  return `¥${Math.round(amount).toLocaleString('ja-JP')}`;
+export function currencyInfo(id: Currency) {
+  return CURRENCIES.find(c => c.id === id) ?? CURRENCIES[0];
+}
+
+export function formatAmount(amount: number, currency: Currency): string {
+  return `${currencyInfo(currency).symbol}${Math.round(amount).toLocaleString('en-US')}`;
 }
 
 export function formatILS(amount: number): string {
-  return `₪${amount.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`;
+  return `₪${Math.round(amount).toLocaleString('he-IL')}`;
 }
 
-export function jpyToIls(jpy: number, rate: number): number {
-  return jpy * rate;
+export function toIls(amount: number, currency: Currency, rates: ExchangeRates): number {
+  return amount * (rates[currency] ?? 0);
 }

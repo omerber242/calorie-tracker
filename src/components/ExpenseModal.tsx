@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { CATEGORIES, formatILS, jpyToIls } from '@/lib/currency';
-import type { Expense, ExpenseCategory, PaymentMethod } from '@/types';
+import { CATEGORIES, CURRENCIES, formatILS, toIls } from '@/lib/currency';
+import type { Currency, Expense, ExpenseCategory, ExchangeRates, PaymentMethod } from '@/types';
 
 function todayStr(): string {
   const d = new Date();
@@ -11,20 +11,21 @@ function todayStr(): string {
 
 export default function ExpenseModal({
   expense,
-  exchangeRate,
+  rates,
   onClose,
   onSaved,
   onDeleted,
 }: {
   expense?: Expense;
-  exchangeRate: number;
+  rates: ExchangeRates;
   onClose: () => void;
   onSaved: (e: Expense) => void;
   onDeleted?: (id: string) => void;
 }) {
   const [date, setDate] = useState(expense?.date || todayStr());
   const [category, setCategory] = useState<ExpenseCategory>(expense?.category || 'food');
-  const [amount, setAmount] = useState(expense ? String(expense.amount_jpy) : '');
+  const [amount, setAmount] = useState(expense ? String(expense.amount) : '');
+  const [currency, setCurrency] = useState<Currency>(expense?.currency || 'JPY');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(expense?.payment_method || 'cash');
   const [description, setDescription] = useState(expense?.description || '');
   const [loading, setLoading] = useState(false);
@@ -50,7 +51,8 @@ export default function ExpenseModal({
       body: JSON.stringify({
         date,
         category,
-        amount_jpy: amountNum,
+        amount: amountNum,
+        currency,
         payment_method: paymentMethod,
         description: description.trim(),
       }),
@@ -116,18 +118,31 @@ export default function ExpenseModal({
           </div>
 
           <div>
-            <label className="label">סכום (¥ ין יפני)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              className="input"
-              placeholder="0"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              autoFocus={!isEdit}
-            />
-            {amountNum > 0 && (
-              <p className="text-xs text-gray-400 mt-1">≈ {formatILS(jpyToIls(amountNum, exchangeRate))}</p>
+            <label className="label">סכום</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                className="input flex-1"
+                placeholder="0"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                autoFocus={!isEdit}
+              />
+              <select
+                className="input w-24 shrink-0"
+                value={currency}
+                onChange={e => setCurrency(e.target.value as Currency)}
+              >
+                {CURRENCIES.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.symbol} {c.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {amountNum > 0 && currency !== 'ILS' && (
+              <p className="text-xs text-gray-400 mt-1">≈ {formatILS(toIls(amountNum, currency, rates))}</p>
             )}
           </div>
 
